@@ -86,7 +86,6 @@
 ---
 
 ### 3. Data Flow Mapping
-*(Bagian ini dapat diisi dengan diagram arsitektur atau deskripsi alur data dari sumber ke visualisasi)*
 
 #### Data Integration Architecture
 1.  **Ingestion:** Penarikan data mentah dari USGS (CSV), Indonesia-Geospasial (SHP), dan WorldPop (TIF).
