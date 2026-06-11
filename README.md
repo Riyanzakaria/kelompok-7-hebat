@@ -15,25 +15,26 @@
 
 # Deskripsi Proyek
 
-Proyek ini menganalisis data historis gempa bumi di Indonesia menggunakan data dari USGS Earthquake Catalog, data batas administrasi provinsi, serta data kepadatan penduduk WorldPop. Data diolah melalui proses spatial join antara titik koordinat gempa dengan wilayah provinsi untuk menghitung frekuensi kejadian gempa per provinsi. Hasil analisis disajikan dalam bentuk visualisasi yang mudah dipahami, yaitu ranking provinsi dengan frekuensi gempa tertinggi dan peta risiko populasi terdampak.
+Proyek ini menganalisis data historis gempa bumi di Indonesia menggunakan data dari USGS Earthquake Catalog, data batas administrasi provinsi/kabupaten, serta data kepadatan penduduk WorldPop/BPS. Data diolah melalui proses spatial join antara titik koordinat gempa dengan wilayah administrasi untuk menghitung frekuensi kejadian gempa per wilayah. Hasil analisis disajikan dalam bentuk visualisasi yang mudah dipahami, yaitu ranking wilayah dengan frekuensi gempa tertinggi dan peta risiko populasi terdampak. Selain itu, sistem menggunakan pemodelan Machine Learning untuk memprediksi kerusakan infrastruktur berdasarkan data historis.
 
 ---
 
 # Manfaat Data / Use Case
 
-- **Tujuan Proyek :** Proyek ini bertujuan untuk menentukan provinsi dengan frekuensi gempa tertinggi di Indonesia dengan membangun pipeline data yang mengotomatisasi proses pengumpulan, pengolahan spasial, dan visualisasi data gempa bumi.
+- **Tujuan Proyek :** Proyek ini bertujuan untuk menentukan wilayah dengan frekuensi gempa tertinggi di Indonesia dengan membangun pipeline data yang mengotomatisasi proses pengumpulan, pengolahan spasial, dan visualisasi data gempa bumi, serta memprediksi risiko kerusakan infrastruktur bangunan secara *real-time*.
 - **Manfaat :** Manfaat dari proyek ini antara lain memberikan informasi berbasis data mengenai wilayah rawan gempa untuk mendukung kebijakan mitigasi bencana, menjadi referensi bagi penelitian lanjutan di bidang kebencanaan dan tata ruang wilayah, meningkatkan kesadaran masyarakat terhadap risiko gempa di provinsi tempat tinggal mereka, serta memberikan pengalaman praktis dalam penerapan teknik data engineering dan analisis geospasial.
+
 ---
 
 # Serving Analisis
 
-...
+Menyajikan metrik KPI utama (Total Kejadian, Rata-rata Magnitudo, dan Total Rumah Rusak Berat). Menampilkan grafik visualisasi tren distribusi 10 wilayah paling sering terdampak gempa di Indonesia dalam antarmuka interaktif berbasis Streamlit pada Tab Business Intelligence Overview.
 
 ---
 
 # Serving Machine Learning
-...
 
+Menyediakan simulator risiko interaktif menggunakan algoritma *Random Forest Regressor*. Pengguna dapat memasukkan parameter fisis gempa (Magnitudo, Kedalaman) dan demografi (Jumlah Populasi) untuk mendapatkan estimasi jumlah kerusakan rumah secara instan beserta status peringatan dini risiko (Rendah, Sedang, Tinggi).
 
 ---
 
@@ -47,67 +48,65 @@ Proyek ini menganalisis data historis gempa bumi di Indonesia menggunakan data d
   * Data Dampak Bencana Gempa (BNPB) - https://data.bnpb.go.id/dataset/data-bencana-indonesia
   * Data Populasi Administrasi Indonesia - https://data.humdata.org/dataset/cod-ps-idn
 - **Metode Pengambilan :**
-  * Metode 1
-  * Metode 2
-  * Metode 3 
+  * Metode 1: Mengunduh dan membaca data mentah berformat `.csv` (untuk rekaman data gempa USGS dan basis data dampak bencana historis BNPB).
+  * Metode 2: Mengunduh dan membaca data spasial berformat `.shp` (Shapefile) untuk batas wilayah administrasi kabupaten/kota menggunakan library GeoPandas.
+  * Metode 3: Mengunduh dan membaca data demografi kependudukan berformat `.xlsx` (Excel) dari HumData / BPS.
 
 ---
 
 # Transform (Pembersihan & Transformasi)
 
 - **Pembersihan :**
-  * Penjelasan
-    + Langkah 1 
-    + Langkah 2
-    + Langkah 3
-    + Langkah 4
+  * Membersihkan data dari nilai yang kosong (*missing values*) serta menyelaraskan format penamaan wilayah agar konsisten di semua dataset untuk kebutuhan proses *join*.
+    + Langkah 1: Menghapus baris yang tidak memiliki nilai esensial seperti `mag`, `latitude`, `longitude`, dan `time` pada data gempa.
+    + Langkah 2: Mengubah zona waktu dari format UTC menjadi WIB untuk konsistensi temporal di seluruh dataset.
+    + Langkah 3: Menstandarisasi penamaan wilayah (menghapus kata 'KABUPATEN ', 'KOTA ', 'KAB. ') agar memudahkan pemetaan dengan data Dukcapil dan BPS.
+    + Langkah 4: Menghapus data anomali atau data residu dengan nama wilayah bernilai 'NONE', 'NAN', atau kosong.
 - **Transformasi :**
-  
-  * Transformasi 1 
-  * Transformasi 2 
-  * Transformasi 3 
+  * Transformasi 1: Membangun Radius Guncangan Spasial (Buffer 75 km) menggunakan GeoPandas dari setiap titik koordinat episentrum gempa.
+  * Transformasi 2: Melakukan *Spatial Join* (`sjoin`) untuk mengetahui irisan (interseksi) antara radius guncangan spasial gempa dengan poligon peta batas administrasi Dukcapil.
+  * Transformasi 3: Melakukan agregasi dan kompilasi metrik kerusakan dari data BNPB serta menyuntikkan data populasi BPS ke dalam matriks data terdampak akhir (*fact_ultimate_impact*).
 
 ---
 
 # Load (Pemindahan ke Target)
 
 - **Target :**
-  
   * **Skema Database:**
-    + ..
-    + ..
+    + Sistem berbasis Cloud Database PostgreSQL (di-hosting via Aiven Cloud Infrastructure).
+    + Tabel penyimpanan utama: `fact_ultimate_impact`
 - **Proses Load :**
-  * ..
-  * ..
-  * ..
-  * ..
+  * Mengonfigurasi dan membangun koneksi aman (*connection string*) menggunakan SQLAlchemy.
+  * Memindahkan DataFrame komposit gabungan ke dalam tabel PostgreSQL menggunakan metode `to_sql(if_exists='replace')`.
+  * Sebagai *caching layer*, data akhir juga disimpan secara lokal dalam file CSV (`data/processed/gempa_clean.csv`) agar Streamlit dapat merender dasbor seketika tanpa perlu menembak kueri berulang kali ke *cloud database*.
 
 ---
 
 # Arsitektur / Workflow ETL
 
-- **Alur Modular :** 
+- **Alur Modular :** Proyek mengadopsi struktur *Arsitektur Menengah (Standard Clean Layout)* yang memisahkan antara `data/` (mentah dan yang diproses), lapisan inti logika pemrosesan ETL dan ML di `src/`, dan lapisan representasi visual (frontend) pada `app.py`.
 - **Teknologi yang Digunakan :**
-  * ETL: 
-  * Machine Learning:
-  * Database: 
-  * Visualisasi: 
+  * ETL: Python, Pandas, GeoPandas, Shapely.
+  * Machine Learning: Scikit-Learn, Joblib.
+  * Database: PostgreSQL (via Aiven Cloud), SQLAlchemy, Python-Dotenv.
+  * Visualisasi: Streamlit, Matplotlib, Seaborn.
 
 ---
 
 # Kode Program
 
 - **Struktur Kode :**
-  * ..
-  * ..
-  * ..
+  * `.env` & `requirements.txt`: Manajemen lingkungan, kredensial basis data, dan library.
+  * `src/database.py`: Modul penghubung koneksi SQLAlchemy.
+  * `src/model.py`: Engine utama, memuat fungsi komplit *Extract, Transform, Load*, serta pemodelan.
+  * `app.py`: Antarmuka berbasis Streamlit dengan struktur *Multi-Tab*.
 - **Machine Learning :**
-  * ..
+  * Algoritma *Random Forest Regressor* digunakan menggantikan Regresi Linear murni untuk mengatasi masalah data relasional yang non-linear dan bias angka nol. Parameter prediktor utama: `mag`, `depth`, dan `Populasi_Daerah` untuk memprediksi `Rumah Rusak Berat`. Metrik evaluasi berbasis R-Squared ($R^2$) dan Mean Squared Error (MSE).
 
 ---
 
 # Link Proyek :
 
-- ETL Pipeline : 
-- Machine Learning : 
-- Streamlit : 
+- ETL Pipeline : Berada terpusat di fungsi `run_etl_pipeline()` dalam `src/model.py`
+- Machine Learning : Berada terpusat di fungsi `train_model()` dalam `src/model.py`
+- Streamlit : Berada di `app.py`

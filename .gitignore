@@ -1,0 +1,40 @@
+# ==========================================
+# FILE RAHASIA & KREDENSIAL (SANGAT PENTING)
+# ==========================================
+.env
+
+# ==========================================
+# FOLDER DATA MENTAH (RAW DATA & PETA)
+# (Tidak perlu dicommit karena ukurannya ratusan MB dan memberatkan GitHub)
+# ==========================================
+BATAS KABUPATEN KOTA DESEMBER 2019 DUKCAPIL/
+data/raw/
+
+# ==========================================
+# EKSTENSI FILE BESAR / TIDAK PENTING
+# ==========================================
+*.csv
+*.xlsx
+*.shp
+*.shx
+*.dbf
+*.prj
+fact_ultimate_impact*
+
+# [PENGECUALIAN] Izinkan file CSV bersih agar Streamlit di Cloud bisa jalan
+!data/processed/gempa_clean.csv
+
+# ==========================================
+# PYTHON SYSTEM FILES
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+# ==========================================
+# FILE EKSPERIMEN SEMENTARA
+# ==========================================
+eksperimen_spasial.py
