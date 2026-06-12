@@ -203,7 +203,11 @@ def train_model():
 
     # Evaluasi (Hanya contoh metrik rata-rata)
     y_pred = model.predict(X_test)
+    r2 = r2_score(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
     print("Model Multi-Output berhasil dilatih.")
+    print(f"Akurasi R-Squared (R2 Score): {r2:.4f}")
+    print(f"Mean Squared Error (MSE): {mse:.4f}")
 
     # Serialize object
     model_path = os.path.join(os.path.dirname(__file__), 'model_earthquake.pkl')
