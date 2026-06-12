@@ -10,3 +10,4 @@ seaborn
 joblib
 geopandas
 shapely
+plotly
