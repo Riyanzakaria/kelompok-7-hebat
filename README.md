@@ -28,13 +28,13 @@ Proyek ini menganalisis data historis gempa bumi di Indonesia menggunakan data d
 
 # Serving Analisis
 
-Menyajikan metrik KPI utama (Total Kejadian, Rata-rata Magnitudo, dan Total Rumah Rusak Berat). Menampilkan grafik visualisasi tren distribusi 10 wilayah paling sering terdampak gempa di Indonesia dalam antarmuka interaktif berbasis Streamlit pada Tab Business Intelligence Overview.
+Menyajikan metrik KPI utama (Total Kejadian, Rata-rata Magnitudo, Total Rumah Rusak Berat, dan Korban Jiwa). Menampilkan Peta Geospasial Interaktif dan grafik distribusi wilayah dengan antarmuka Premium bergaya *Glassmorphism* berbasis Streamlit pada Tab Business Intelligence Overview.
 
 ---
 
 # Serving Machine Learning
 
-Menyediakan simulator risiko interaktif menggunakan algoritma *Random Forest Regressor*. Pengguna dapat memasukkan parameter fisis gempa (Magnitudo, Kedalaman) dan demografi (Jumlah Populasi) untuk mendapatkan estimasi jumlah kerusakan rumah secara instan beserta status peringatan dini risiko (Rendah, Sedang, Tinggi).
+Menyediakan simulator risiko cerdas menggunakan algoritma *Multi-Output Random Forest Regressor*. Pengguna cukup memilih wilayah (*Dropdown* pintar) untuk mengekstrak parameter demografi dan spasial secara otomatis, lalu memasukkan fisis gempa (Magnitudo, Kedalaman). Sistem memberikan estimasi 4 metrik dampak sekaligus (Rumah Hancur, Korban Jiwa, Luka, Faskes) secara instan beserta status peringatan dini risiko (Aman, Waspada, Siaga Darurat).
 
 ---
 
@@ -101,7 +101,7 @@ Menyediakan simulator risiko interaktif menggunakan algoritma *Random Forest Reg
   * `src/model.py`: Engine utama, memuat fungsi komplit *Extract, Transform, Load*, serta pemodelan.
   * `app.py`: Antarmuka berbasis Streamlit dengan struktur *Multi-Tab*.
 - **Machine Learning :**
-  * Algoritma *Random Forest Regressor* digunakan menggantikan Regresi Linear murni untuk mengatasi masalah data relasional yang non-linear dan bias angka nol. Parameter prediktor utama: `mag`, `depth`, dan `Populasi_Daerah` untuk memprediksi `Rumah Rusak Berat`. Metrik evaluasi berbasis R-Squared ($R^2$) dan Mean Squared Error (MSE).
+  * Algoritma *Multi-Output Random Forest Regressor* digunakan menggantikan Regresi Linear murni untuk memprediksi **4 variabel sekaligus** (Rumah Hancur, Korban Meninggal, Luka/Sakit, dan Faskes Rusak). Parameter prediktor diperluas dengan *Geospatial Intelligence* (`mag`, `depth`, `latitude`, `longitude`, dan `Populasi_Daerah`). Model juga menerapkan teknik **Sample Weights** (pembobotan) untuk mengatasi anomali *Zero-Inflated Data* agar kejadian gempa merusak tidak diabaikan algoritma.
 
 ---
 
